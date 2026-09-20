@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>歐陸漫遊 40 天多幣別旅行記帳 🥐 | EuroTrip Ledger</title>
+  <meta name="description" content="專為歐洲40天旅行打造的奶油白可愛風多幣別記帳與行程指南，手機超好用，支援 EUR、CHF、USD 即時匯率換算與雲端多人同步。">
+  <meta name="theme-color" content="#FAF7F2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: {
+              50: '#FFFDF9',
+              100: '#FAF7F2',
+              200: '#F5ECE1',
+              300: '#EFE4D6',
+              400: '#D8C7B5',
+              800: '#706258',
+              900: '#3A302A',
+            },
+            warm: {
+              peach: '#FF8E72',
+              caramel: '#E88D67',
+              honey: '#F3B664',
+              matcha: '#68A67D',
+              berry: '#FF7B90',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Supabase JS CDN (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="text-[#3A302A] min-h-screen flex flex-col antialiased selection:bg-[#FCD5B5] selection:text-[#3A302A] pb-28 md:pb-12">
+
+  <!-- ========================================================================= -->
+  <!-- 頂部導覽列 (Top Navigation Bar - 奶油白風格) -->
+  <!-- ========================================================================= -->
+  <header class="sticky top-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#F0E6D8] shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- 標題與可愛 Logo -->
+      <div class="flex items-center gap-2.5 cursor-pointer" onclick="window.app.switchTab('dashboard')">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FFE0D3] via-[#FFF1E6] to-[#FFF8EE] border border-[#FCD5B5] flex items-center justify-center text-xl shadow-sm">
+          🥐
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-extrabold text-base sm:text-lg tracking-tight gradient-text-warm">歐陸漫遊 40 天</h1>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFF0E6] text-[#D96B43] font-bold border border-[#FCD5B5]">記帳本</span>
+          </div>
+          <p class="text-[10px] text-[#8C7A6B] font-medium">多幣別即時折算 ＆ 行程指南 ✨</p>
+        </div>
+      </div>
+
+      <!-- 桌面版導覽列 (Desktop Nav) -->
+      <nav class="hidden md:flex items-center gap-1 bg-[#F5ECE1]/60 p-1 rounded-2xl border border-[#EFE4D6]">
+        <button data-tab-target="dashboard" class="px-3.5 py-1.5 rounded-xl text-xs font-bold active-nav-tab transition-all flex items-center gap-1.5">
+          <span>📊</span> 總覽儀表板
+        </button>
+        <button data-tab-target="ledger" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#706258] hover:text-[#3A302A] transition-all flex items-center gap-1.5">
+          <span>📜</span> 支出流水帳
+        </button>
+        <button data-tab-target="guide" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#706258] hover:text-[#3A302A] transition-all flex items-center gap-1.5">
+          <span>🗺️</span> 40天攻略
+        </button>
+        <button data-tab-target="rates" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#706258] hover:text-[#3A302A] transition-all flex items-center gap-1.5">
+          <span>💱</span> 即時匯率
+        </button>
+      </nav>
+
+      <!-- 右側：雲端狀態燈號 & 記帳快捷按鈕 -->
+      <div class="flex items-center gap-2">
+        <!-- 雲端同步指示器 -->
+        <div id="cloud-status-badge" onclick="window.app.openCloudSettingsModal()" 
+             class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold cursor-pointer hover:bg-emerald-100 transition-all shadow-sm"
+             title="點擊設定 Supabase / Google 試算表雲端同步">
+          <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-[#68A67D] animate-pulse"></span>
+          <span id="cloud-status-text" class="hidden sm:inline">雲端已同步</span>
+        </div>
+
+        <!-- 雲端設定按鈕 -->
+        <button onclick="window.app.openCloudSettingsModal()" 
+                class="p-2 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#706258] transition-colors border border-[#EFE4D6] text-sm shadow-sm btn-cute"
+                title="雲端資料庫設定">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+
+        <!-- 桌面版快速記帳按鈕 -->
+        <button onclick="window.app.openAddExpenseModal()" 
+                class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-gradient-to-r from-[#E88D67] to-[#D96B43] hover:from-[#DF7F58] hover:to-[#CA5E37] text-white font-bold text-xs shadow-md shadow-orange-500/20 transition-all btn-cute">
+          <i class="fa-solid fa-plus text-xs"></i> 記一筆 ✍️
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 主要內容區 (Tab Panels Container) -->
+  <!-- ========================================================================= -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+    <!-- ======================================================================= -->
+    <!-- TAB 1: 總覽儀表板 (Dashboard) -->
+    <!-- ======================================================================= -->
+    <section id="tab-panel-dashboard" class="tab-content-panel space-y-5">
+      
+      <!-- 頂部核心指標卡片 (KPI Summary) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        
+        <!-- 1. 總支出 / 總預算 -->
+        <div class="cream-card p-4 sm:p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[#8C7A6B] mb-1.5">
+            <span class="text-xs font-bold">累計總支出 (TWD)</span>
+            <span class="p-1.5 rounded-xl bg-[#FFF0E6] text-[#D96B43] text-xs">💸</span>
+          </div>
+          <div>
+            <div id="stat-total-spent" class="text-xl sm:text-2xl font-black font-mono text-[#3A302A]">NT$ 0</div>
+            <div class="text-[11px] text-[#8C7A6B] mt-1 flex items-center justify-between">
+              <span>預算：<span id="stat-total-budget" class="font-mono text-[#3A302A]">NT$ 200,000</span></span>
+              <span id="stat-budget-percent" class="font-bold text-[#D96B43]">0%</span>
+            </div>
+          </div>
+          <div class="w-full bg-[#EFE4D6] rounded-full h-2 mt-2.5 overflow-hidden">
+            <div id="stat-budget-progress" class="h-2 rounded-full bg-[#E88D67] transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- 2. 剩餘可用預算 -->
+        <div class="cream-card p-4 sm:p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[#8C7A6B] mb-1.5">
+            <span class="text-xs font-bold">剩餘可用預算</span>
+            <span class="p-1.5 rounded-xl bg-[#EBF7EE] text-[#2D6A4F] text-xs">🐷</span>
+          </div>
+          <div>
+            <div id="stat-remaining-budget" class="text-xl sm:text-2xl font-black font-mono text-[#4A7C59]">NT$ 200,000</div>
+            <p class="text-[11px] text-[#8C7A6B] mt-1">維持旅行財務健康線 ✨</p>
+          </div>
+          <div class="text-[10px] text-[#8C7A6B] mt-2.5 flex items-center gap-1">
+            <span>🛡️</span> 預留 15% 跨國緊急金
+          </div>
+        </div>
+
+        <!-- 3. 每日平均花費 -->
+        <div class="cream-card p-4 sm:p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[#8C7A6B] mb-1.5">
+            <span class="text-xs font-bold">每日平均支出</span>
+            <span class="p-1.5 rounded-xl bg-[#FFF8E1] text-[#F57F17] text-xs">🧮</span>
+          </div>
+          <div>
+            <div id="stat-daily-avg" class="text-xl sm:text-2xl font-black font-mono text-[#D96B43]">NT$ 0</div>
+            <p class="text-[11px] text-[#8C7A6B] mt-1">依已記錄天數計算</p>
+          </div>
+          <div class="text-[10px] text-[#8C7A6B] mt-2.5 flex items-center gap-1">
+            <span>📅</span> 總行程：40 天歐陸漫遊
+          </div>
+        </div>
+
+        <!-- 4. 未來每日建議安全額度 -->
+        <div class="cream-card p-4 sm:p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[#8C7A6B] mb-1.5">
+            <span class="text-xs font-bold">未來每日額度</span>
+            <span class="p-1.5 rounded-xl bg-[#E8F0FE] text-[#1967D2] text-xs">🎯</span>
+          </div>
+          <div>
+            <div id="stat-safe-daily" class="text-xl sm:text-2xl font-black font-mono text-[#2B6CB0]">NT$ 5,000</div>
+            <p class="text-[11px] text-[#8C7A6B] mt-1">剩餘預算 ÷ 剩餘天數</p>
+          </div>
+          <div class="text-[10px] text-[#8C7A6B] mt-2.5 flex items-center gap-1">
+            <span>📈</span> 動態控管後續節奏
+          </div>
+        </div>
+      </div>
+
+      <!-- 多幣別原幣累計卡片區 -->
+      <div class="cream-card p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs sm:text-sm font-black text-[#3A302A] flex items-center gap-1.5">
+            <span>🪙</span> 各國主要幣別累計花費
+          </h3>
+          <span class="text-[11px] text-[#8C7A6B]">即時匯率折算</span>
+        </div>
+        <div id="stat-currency-breakdown" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <!-- 由 JS 動態注入幣別卡片 -->
+        </div>
+      </div>
+
+      <!-- 圖表分析區：分類佔比 ＆ 每日走勢 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+        
+        <!-- 分類佔比 -->
+        <div class="cream-card p-4 sm:p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs sm:text-sm font-black text-[#3A302A] flex items-center gap-1.5">
+              <span>🍰</span> 支出類別佔比
+            </h3>
+            <span class="text-[11px] text-[#8C7A6B]">交通、餐飲、住宿等</span>
+          </div>
+          <div class="relative flex-1 min-h-[240px] flex items-center justify-center">
+            <canvas id="category-doughnut-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- 每日花費走勢 -->
+        <div class="cream-card p-4 sm:p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs sm:text-sm font-black text-[#3A302A] flex items-center gap-1.5">
+              <span>📊</span> 每日花費趨勢 (TWD)
+            </h3>
+            <span class="text-[11px] text-[#8C7A6B]">各日支出動態</span>
+          </div>
+          <div class="relative flex-1 min-h-[240px]">
+            <canvas id="daily-trend-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 快速功能工具條 -->
+      <div class="cream-card p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btn-export-csv" class="px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF7F2] text-xs font-bold text-[#3A302A] border border-[#EFE4D6] flex items-center gap-1.5 shadow-sm btn-cute">
+            <span>📥</span> 匯出 CSV (Excel無亂碼)
+          </button>
+          <button onclick="window.cloudSync.exportJSONBackup()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF7F2] text-xs font-bold text-[#3A302A] border border-[#EFE4D6] flex items-center gap-1.5 shadow-sm btn-cute">
+            <span>💾</span> JSON 完整備份
+          </button>
+          <label class="px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF7F2] text-xs font-bold text-[#3A302A] border border-[#EFE4D6] flex items-center gap-1.5 cursor-pointer shadow-sm btn-cute">
+            <span>📂</span> 還原備份
+            <input type="file" accept=".json" class="hidden" onchange="const f = this.files[0]; if(f) { const r = new FileReader(); r.onload = (e) => window.cloudSync.importJSONBackup(e.target.result).then(res => { if(res.success) { window.app.showToast(`✅ 成功匯入 ${res.count} 筆紀錄！`, 'success'); window.ledgerManager.loadExpenses(); } else { window.app.showToast(`匯入失敗: ${res.error}`, 'error'); } }); r.readAsText(f); }">
+          </label>
+        </div>
+
+        <button onclick="window.app.openAddExpenseModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#E88D67] to-[#D96B43] text-white text-xs font-black shadow-md shadow-orange-500/20 flex items-center justify-center gap-1.5 btn-cute">
+          <span>✍️</span> 記下一筆新支出
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 2: 記帳流水帳 (Ledger - 手機卡片 + 桌面表格) -->
+    <!-- ======================================================================= -->
+    <section id="tab-panel-ledger" class="tab-content-panel hidden space-y-4">
+      
+      <!-- 篩選與搜尋工具欄 -->
+      <div class="cream-card p-4 sm:p-5 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm sm:text-base font-black text-[#3A302A] flex items-center gap-1.5">
+              <span>📜</span> 旅行支出明細
+            </h2>
+            <span id="filter-result-count" class="text-xs px-2.5 py-0.5 rounded-full bg-[#FFF0E6] text-[#D96B43] font-bold border border-[#FCD5B5]">
+              共 0 筆帳目 ☕
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btn-reset-filter" class="text-xs px-3 py-1.5 rounded-xl bg-white hover:bg-[#FAF7F2] text-[#706258] font-bold border border-[#EFE4D6] shadow-sm btn-cute">
+              重設篩選
+            </button>
+            <button onclick="window.app.openAddExpenseModal()" class="text-xs px-3.5 py-1.5 rounded-xl bg-[#E88D67] text-white font-bold flex items-center gap-1 shadow-sm btn-cute">
+              <span>➕</span> 記一筆
+            </button>
+          </div>
+        </div>
+
+        <!-- 篩選控制項 Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-1">
+          <!-- 關鍵字搜尋 -->
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#8C7A6B] text-xs">🔍</span>
+            <input type="text" id="search-keyword" placeholder="搜尋項目、地點、備註..." 
+                   class="w-full pl-8 pr-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs text-[#3A302A] placeholder-[#A3968B] focus:outline-none focus:border-[#E88D67] shadow-sm">
+          </div>
+
+          <!-- 類別篩選 -->
+          <div>
+            <select id="filter-category" class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+              <option value="ALL">全部類別</option>
+              <option value="交通">🚂 交通 (火車/機票/地鐵)</option>
+              <option value="住宿">🏨 住宿 (飯店/Airbnb)</option>
+              <option value="餐飲">🥐 餐飲 (餐廳/超市/點心)</option>
+              <option value="門票景點">🎟️ 門票景點 (博物館/活動)</option>
+              <option value="購物">🛍️ 購物紀念品</option>
+              <option value="通訊保險">🛡️ 通訊保險</option>
+              <option value="其他">✨ 其他雜支</option>
+            </select>
+          </div>
+
+          <!-- 幣別篩選 -->
+          <div>
+            <select id="filter-currency" class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+              <!-- 由 JS 注入 -->
+            </select>
+          </div>
+
+          <!-- 起始日期 -->
+          <div>
+            <input type="date" id="filter-date-from" title="起始日期" 
+                   class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+          </div>
+
+          <!-- 結束日期 -->
+          <div>
+            <input type="date" id="filter-date-to" title="結束日期" 
+                   class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. 手機端專用卡片流 (Mobile Card View) -->
+      <div id="expense-mobile-list" class="md:hidden space-y-3">
+        <!-- 由 JS 動態注入手機卡片 -->
+      </div>
+
+      <!-- 2. 桌面端表格 (Desktop Table View) -->
+      <div class="hidden md:block cream-card overflow-hidden">
+        <div class="table-scroll-container">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-[#F0E6D8] bg-[#FDF8F3] text-[11px] font-bold text-[#8C7A6B] uppercase tracking-wider">
+                <th class="py-3.5 px-4">日期 / 天數</th>
+                <th class="py-3.5 px-4">消費類別</th>
+                <th class="py-3.5 px-4">項目名稱 ＆ 備註</th>
+                <th class="py-3.5 px-4 text-right">外幣 / 匯率</th>
+                <th class="py-3.5 px-4 text-right">折合台幣 (TWD)</th>
+                <th class="py-3.5 px-4">支付方式 / 付款人</th>
+                <th class="py-3.5 px-4 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="expense-table-body">
+              <!-- 由 JS 動態注入列資料 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 空狀態提示 (Empty State) -->
+      <div id="expense-empty-state" class="hidden py-14 px-4 text-center cream-card">
+        <div class="text-4xl mb-3">🧺</div>
+        <h3 class="text-sm sm:text-base font-black text-[#3A302A] mb-1">目前沒有找到符合的帳目喔～</h3>
+        <p class="text-xs text-[#8C7A6B] mb-4">點擊下方按鈕記下你的第一筆歐洲旅行開銷吧！</p>
+        <button onclick="window.app.openAddExpenseModal()" class="px-5 py-2.5 rounded-2xl bg-[#E88D67] hover:bg-[#D96B43] text-white text-xs font-black shadow-md btn-cute">
+          ➕ 立即記下一筆
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 3: 40 天歐洲行程攻略專區 (40-Day EuroTrip Hub) -->
+    <!-- ======================================================================= -->
+    <section id="tab-panel-guide" class="tab-content-panel hidden space-y-5">
+      
+      <!-- 1. DCC 嚴禁警示橫幅 -->
+      <div id="dcc-warning-banner">
+        <!-- 由 JS 動態渲染 -->
+      </div>
+
+      <!-- 2. 行程節奏與體力預警 -->
+      <div class="space-y-3">
+        <div>
+          <h2 class="text-base sm:text-lg font-black text-[#3A302A] flex items-center gap-1.5">
+            <span>🚶</span> 40 天行程節奏與體力預警 (Pacing Notice)
+          </h2>
+          <p class="text-xs text-[#8C7A6B] mt-0.5">避免體力透支，前後段體能與作息調配攻略</p>
+        </div>
+
+        <div id="pacing-timeline-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- 由 JS 動態渲染 -->
+        </div>
+      </div>
+
+      <!-- 3. 早鳥搶票與預訂追蹤清單 -->
+      <div class="space-y-3 pt-2">
+        <div>
+          <h2 class="text-base sm:text-lg font-black text-[#3A302A] flex items-center gap-1.5">
+            <span>🎟️</span> 早鳥搶票與預訂清單 (Early Bird Watchlist)
+          </h2>
+          <p class="text-xs text-[#8C7A6B] mt-0.5">跨國高鐵、熱門景點門票與阿爾卑斯跳傘監控</p>
+        </div>
+
+        <div id="booking-watchlist-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <!-- 由 JS 動態渲染卡片 -->
+        </div>
+      </div>
+
+      <!-- 4. 信用卡防雷與防扒錦囊 -->
+      <div class="space-y-3 pt-2">
+        <h2 class="text-base sm:text-lg font-black text-[#3A302A] flex items-center gap-1.5">
+          <span>🛡️</span> 歐洲刷卡防雷 ＆ 財物防竊錦囊
+        </h2>
+        
+        <div id="credit-card-tips-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <!-- 由 JS 動態渲染 -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 4: 即時匯率中心 (Currency Rates & Calculator) -->
+    <!-- ======================================================================= -->
+    <section id="tab-panel-rates" class="tab-content-panel hidden space-y-5">
+      
+      <!-- 頂部即時匯率說明條 -->
+      <div class="cream-card p-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm sm:text-base font-black text-[#3A302A] flex items-center gap-1.5">
+            <span>💱</span> 即時國際匯率牌告 (對台幣 TWD)
+          </h2>
+          <p id="rates-last-updated-time" class="text-xs text-[#8C7A6B] mt-0.5">載入中...</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="window.app.refreshRatesOnline()" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#FAF7F2] text-xs font-bold text-[#D96B43] border border-[#FCD5B5] shadow-sm flex items-center gap-1 btn-cute">
+            <span>🔄</span> 更新即時匯率
+          </button>
+          <button onclick="window.currencyManager.resetCustomRates(); window.app.showToast('已還原所有自訂匯率', 'info');" class="px-3 py-1.5 rounded-xl bg-white hover:bg-[#FAF7F2] text-xs font-bold text-[#706258] border border-[#EFE4D6] shadow-sm btn-cute">
+            還原預設
+          </button>
+        </div>
+      </div>
+
+      <!-- 快速匯率試算計算機 -->
+      <div class="cream-card p-5">
+        <h3 class="text-xs sm:text-sm font-black text-[#3A302A] mb-3 flex items-center gap-1.5">
+          <span>🧮</span> 快速雙向匯率即時試算
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+          <!-- 外幣輸入 -->
+          <div class="md:col-span-5 space-y-1">
+            <label class="text-xs font-bold text-[#706258]">外幣金額與幣別</label>
+            <div class="flex gap-2">
+              <input type="number" id="calc-input-amount" value="50" min="0" step="any" 
+                     class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#EFE4D6] text-base font-black font-mono text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+              <select id="calc-from-currency" class="px-3 py-2.5 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+                <!-- 由 JS 注入 -->
+              </select>
+            </div>
+          </div>
+
+          <!-- 等號符號 -->
+          <div class="md:col-span-2 flex items-center justify-center text-[#D96B43] text-xl font-bold pt-2">
+            ⇄
+          </div>
+
+          <!-- 折合台幣顯示 -->
+          <div class="md:col-span-5 space-y-1">
+            <label class="text-xs font-bold text-[#706258]">折合新台幣 (TWD)</label>
+            <div class="p-2.5 rounded-xl bg-[#EBF7EE] border border-[#B7E4C7] flex items-center justify-between shadow-sm">
+              <span id="calc-output-twd" class="text-xl font-black font-mono text-[#2D6A4F]">NT$ 0</span>
+              <span class="text-[11px] px-2 py-0.5 rounded-lg bg-emerald-200/60 text-[#2D6A4F] font-bold">精確換算</span>
+            </div>
+            <div id="calc-rate-note" class="text-[11px] text-[#8C7A6B]">計算中...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 匯率卡片清單 -->
+      <div id="exchange-rates-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- 由 JS 動態渲染 -->
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- 支出新增 / 編輯 Modal (Expense Modal - 奶油白可愛風格) -->
+  <!-- ========================================================================= -->
+  <div id="expense-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
+    <div class="modal-sheet-content relative w-full max-w-lg rounded-3xl bg-[#FFFDF9] border border-[#F0E6D8] shadow-2xl p-5 sm:p-7 space-y-4 my-0 sm:my-8">
+      
+      <!-- 標題與關閉按鈕 -->
+      <div class="flex items-center justify-between border-b border-[#F0E6D8] pb-3">
+        <h3 id="expense-modal-title" class="text-base sm:text-lg font-black text-[#3A302A] flex items-center gap-1.5">
+          記下一筆新支出 ✍️
+        </h3>
+        <button onclick="window.app.closeExpenseModal()" class="text-[#8C7A6B] hover:text-[#3A302A] p-2 rounded-xl hover:bg-[#F5ECE1] transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- 記帳表單 -->
+      <form id="expense-form" onsubmit="window.app.handleExpenseFormSubmit(event)" class="space-y-3.5">
+        
+        <!-- 日期與天數 -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-[#706258] mb-1">消費日期 *</label>
+            <input type="date" id="form-date" required 
+                   class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#706258] mb-1">行程天數 (選填)</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8C7A6B]">Day</span>
+              <input type="number" id="form-trip-day" min="1" max="40" placeholder="1~40" 
+                     class="w-full pl-10 pr-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm font-mono">
+            </div>
+          </div>
+        </div>
+
+        <!-- 消費類別與項目名稱 -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-[#706258] mb-1">類別 *</label>
+            <select id="form-category" required class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+              <option value="交通">🚂 交通</option>
+              <option value="住宿">🏨 住宿</option>
+              <option value="餐飲">🥐 餐飲</option>
+              <option value="門票景點">🎟️ 門票景點</option>
+              <option value="購物">🛍️ 購物</option>
+              <option value="通訊保險">🛡️ 通訊保險</option>
+              <option value="其他">✨ 其他雜支</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-[#706258] mb-1">項目名稱 *</label>
+            <input type="text" id="form-item-name" required placeholder="例如：聖家堂門票、跨國高鐵..." 
+                   class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+          </div>
+        </div>
+
+        <!-- 幣別、金額與即時換算 -->
+        <div class="p-3.5 rounded-2xl bg-[#FFF9F2] border border-[#F5ECE1] space-y-2.5">
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-xs font-bold text-[#706258] mb-1">幣別 *</label>
+              <select id="form-currency" required class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-black text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+                <!-- JS 注入 -->
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#706258] mb-1">外幣金額 *</label>
+              <input type="number" id="form-foreign-amount" required step="0.01" min="0.01" placeholder="0.00" 
+                     class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-sm font-black font-mono text-[#D96B43] focus:outline-none focus:border-[#E88D67] shadow-sm">
+            </div>
+          </div>
+
+          <!-- 自訂匯率微調 -->
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-[#8C7A6B]">換算生效匯率：</span>
+            <div class="flex items-center gap-1">
+              <input type="number" id="form-custom-rate" step="0.0001" min="0.0001" 
+                     class="w-24 px-2 py-1 rounded-lg bg-white border border-[#EFE4D6] text-xs text-right font-mono font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67]">
+              <span class="text-[#8C7A6B] text-[11px]">TWD</span>
+            </div>
+          </div>
+
+          <!-- 即時折算台幣結果 -->
+          <div id="form-twd-display" class="p-2 rounded-xl bg-[#EBF7EE] border border-[#B7E4C7] text-xs font-black text-[#2D6A4F] text-center shadow-sm">
+            折合 NT$ 0 (即時計算)
+          </div>
+        </div>
+
+        <!-- 支付方式與付款人 -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-[#706258] mb-1">支付方式</label>
+            <select id="form-payment-method" class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+              <option value="信用卡A (海外回饋 3% 無上限)">💳 信用卡A (海外3%)</option>
+              <option value="信用卡B (高額海外刷卡備用卡)">💳 信用卡B (備用卡)</option>
+              <option value="歐元現金 (EUR Cash)">💶 歐元現金 (EUR)</option>
+              <option value="瑞郎現金 (CHF Cash)">🇨🇭 瑞郎現金 (CHF)</option>
+              <option value="捷克克朗現金 (CZK Cash)">🇨🇿 捷克克朗 (CZK)</option>
+              <option value="Apple Pay / Google Pay">📱 行動支付 / Apple Pay</option>
+              <option value="出發前預付 (台灣網銀/LinePay)">🇹🇼 出發前預付</option>
+              <option value="其他支付方式">✨ 其他方式</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#706258] mb-1">付款人 / 分帳</label>
+            <div class="flex gap-1.5">
+              <input type="text" id="form-payer" value="個人" placeholder="小明" 
+                     class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+              <select id="form-split-type" class="w-18 px-2 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs font-bold text-[#706258] focus:outline-none">
+                <option value="個人">個人</option>
+                <option value="均分">均分</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 消費城市與備註 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-[#706258] mb-1">地點/城市 (選填)</label>
+            <input type="text" id="form-city" placeholder="如：巴黎、琉森、馬德里..." 
+                   class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#706258] mb-1">備註 (選填)</label>
+            <input type="text" id="form-notes" placeholder="如：選歐元結帳防DCC..." 
+                   class="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE4D6] text-xs text-[#3A302A] focus:outline-none focus:border-[#E88D67] shadow-sm">
+          </div>
+        </div>
+
+        <!-- 提交按鈕組 -->
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#F0E6D8]">
+          <button type="button" onclick="window.app.closeExpenseModal()" class="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-[#706258] btn-cute">
+            取消
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#E88D67] to-[#D96B43] hover:from-[#DF7F58] hover:to-[#CA5E37] text-white text-xs font-black shadow-md shadow-orange-500/20 btn-cute">
+            確認儲存記帳 💾
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 可愛自訂刪除確認 Modal (Delete Confirm Modal) -->
+  <!-- ========================================================================= -->
+  <div id="delete-confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div class="relative w-full max-w-sm rounded-3xl bg-[#FFFDF9] border-2 border-[#FCD5B5] shadow-2xl p-6 text-center space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl shadow-inner">
+        🗑️
+      </div>
+      <div>
+        <h3 class="text-base font-black text-[#3A302A] mb-1">確定要刪除這筆支出嗎？</h3>
+        <p class="text-xs font-bold text-[#D96B43] mt-1" id="delete-modal-item-text">這筆帳目</p>
+        <p class="text-xs text-[#8C7A6B] mt-1.5">刪除後本機與雲端資料將同步移除喔！🥺</p>
+      </div>
+
+      <div class="flex items-center justify-center gap-3 pt-2">
+        <button onclick="window.app.closeDeleteModal()" class="w-1/2 py-2.5 rounded-xl bg-[#F5ECE1] hover:bg-[#EFE4D6] text-xs font-bold text-[#706258] btn-cute">
+          保留帳目
+        </button>
+        <button onclick="window.app.executeDeleteExpense()" class="w-1/2 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black shadow-md shadow-red-500/20 btn-cute">
+          確認刪除 🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 雲端與資料庫設定 Modal (Cloud Settings Modal) -->
+  <!-- ========================================================================= -->
+  <div id="cloud-settings-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto">
+    <div class="modal-sheet-content relative w-full max-w-xl rounded-3xl bg-[#FFFDF9] border border-[#F0E6D8] shadow-2xl p-5 sm:p-7 space-y-4 my-0 sm:my-8">
+      
+      <!-- 標題 -->
+      <div class="flex items-center justify-between border-b border-[#F0E6D8] pb-3">
+        <div>
+          <h3 class="text-base sm:text-lg font-black text-[#3A302A] flex items-center gap-1.5">
+            <span>☁️</span> 雲端持久化與資料庫設定
+          </h3>
+          <p class="text-xs text-[#8C7A6B] mt-0.5">跨國多隊友同步・離線優先・資料永不遺失</p>
+        </div>
+        <button onclick="window.app.closeCloudSettingsModal()" class="text-[#8C7A6B] hover:text-[#3A302A] p-2 rounded-xl hover:bg-[#F5ECE1]">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="window.app.saveCloudSettings(event)" class="space-y-3.5">
+        
+        <!-- 儲存模式選擇 -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-black text-[#3A302A]">選擇儲存後端模式：</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            
+            <label class="flex items-center gap-2.5 p-3 rounded-2xl border border-[#EFE4D6] bg-white cursor-pointer hover:border-[#FCD5B5] transition-all shadow-sm">
+              <input type="radio" name="storage-mode" value="local" onchange="window.app.toggleBackendSettingsFields('local')" class="text-[#E88D67] focus:ring-0">
+              <div>
+                <div class="text-xs font-bold text-[#3A302A]">本機離線</div>
+                <div class="text-[10px] text-[#8C7A6B]">LocalStorage 快取</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-3 rounded-2xl border border-[#FCD5B5] bg-[#FFF8F3] cursor-pointer hover:border-[#E88D67] transition-all shadow-sm">
+              <input type="radio" name="storage-mode" value="supabase" onchange="window.app.toggleBackendSettingsFields('supabase')" checked class="text-[#E88D67] focus:ring-0">
+              <div>
+                <div class="text-xs font-bold text-[#D96B43]">Supabase (推薦)</div>
+                <div class="text-[10px] text-[#D96B43]/80">免費即時 SQL</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-2.5 p-3 rounded-2xl border border-[#B7E4C7] bg-[#F4FAF6] cursor-pointer hover:border-[#68A67D] transition-all shadow-sm">
+              <input type="radio" name="storage-mode" value="google_sheet" onchange="window.app.toggleBackendSettingsFields('google_sheet')" class="text-[#68A67D] focus:ring-0">
+              <div>
+                <div class="text-xs font-bold text-[#2D6A4F]">Google 試算表</div>
+                <div class="text-[10px] text-[#2D6A4F]/80">Apps Script API</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 40 天總預算設定 -->
+        <div>
+          <label class="block text-xs font-bold text-[#706258] mb-1">40 天旅行總預算 (TWD NT$)</label>
+          <input type="number" id="setting-total-budget" value="200000" min="1000" step="1000" 
+                 class="w-full px-3.5 py-2 rounded-xl bg-white border border-[#EFE4D6] text-sm font-black font-mono text-[#2D6A4F] focus:outline-none focus:border-[#E88D67] shadow-sm">
+        </div>
+
+        <!-- Supabase 專用設定欄位 -->
+        <div id="settings-supabase-fields" class="space-y-2.5 p-3.5 rounded-2xl bg-[#FFF8F3] border border-[#FCD5B5]">
+          <div class="text-xs font-black text-[#D96B43] flex items-center gap-1.5">
+            <span>⚡</span> Supabase 連線憑證
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-[#706258] mb-1">Project URL</label>
+            <input type="url" id="setting-supabase-url" placeholder="https://xyz.supabase.co" 
+                   class="w-full px-3 py-1.5 rounded-xl bg-white border border-[#EFE4D6] text-xs text-[#3A302A] focus:outline-none focus:border-[#E88D67] font-mono shadow-sm">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-[#706258] mb-1">Anon Public Key</label>
+            <input type="text" id="setting-supabase-key" placeholder="eyJhbGciOi..." 
+                   class="w-full px-3 py-1.5 rounded-xl bg-white border border-[#EFE4D6] text-xs text-[#3A302A] focus:outline-none focus:border-[#E88D67] font-mono shadow-sm">
+          </div>
+          <p class="text-[11px] text-[#8C7A6B]">
+            💡 提示：在 Supabase SQL Editor 貼上本專案的 <code class="text-[#D96B43] font-mono">backend/supabase_schema.sql</code> 執行即可！
+          </p>
+        </div>
+
+        <!-- Google Sheets 專用設定欄位 -->
+        <div id="settings-gsheet-fields" class="hidden space-y-2.5 p-3.5 rounded-2xl bg-[#F4FAF6] border border-[#B7E4C7]">
+          <div class="text-xs font-black text-[#2D6A4F] flex items-center gap-1.5">
+            <span>📊</span> Google Apps Script Web App URL
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-[#706258] mb-1">Web App 部署網址</label>
+            <input type="url" id="setting-gsheet-url" placeholder="https://script.google.com/macros/s/.../exec" 
+                   class="w-full px-3 py-1.5 rounded-xl bg-white border border-[#EFE4D6] text-xs text-[#3A302A] focus:outline-none focus:border-[#68A67D] font-mono shadow-sm">
+          </div>
+        </div>
+
+        <!-- 按鈕組 -->
+        <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-[#F0E6D8]">
+          <button type="button" onclick="window.app.closeCloudSettingsModal()" class="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-[#706258] btn-cute">
+            關閉
+          </button>
+          <button type="submit" class="px-6 py-2 rounded-2xl bg-[#E88D67] hover:bg-[#D96B43] text-white text-xs font-black shadow-md btn-cute">
+            儲存並連接同步 ✨
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 手機版底部導覽列 (Mobile Sticky Bottom Bar - 奶油白可愛風) -->
+  <!-- ========================================================================= -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 mobile-bottom-bar px-3 py-1.5 flex items-center justify-around">
+    <button data-tab-target="dashboard" class="flex flex-col items-center gap-0.5 text-[#706258] active-nav-tab p-1.5 rounded-xl btn-cute">
+      <span class="text-base">📊</span>
+      <span class="text-[10px] font-bold">總覽</span>
+    </button>
+    <button data-tab-target="ledger" class="flex flex-col items-center gap-0.5 text-[#706258] p-1.5 rounded-xl btn-cute">
+      <span class="text-base">📜</span>
+      <span class="text-[10px] font-bold">流水帳</span>
+    </button>
+    
+    <!-- 中間突出的可愛大圓記帳鈕 -->
+    <button onclick="window.app.openAddExpenseModal()" 
+            class="-mt-5 w-12 h-12 rounded-full bg-gradient-to-tr from-[#E88D67] to-[#FFA07A] text-white shadow-lg shadow-orange-500/30 flex items-center justify-center text-xl font-bold active:scale-90 transition-transform border-2 border-white">
+      ➕
+    </button>
+
+    <button data-tab-target="guide" class="flex flex-col items-center gap-0.5 text-[#706258] p-1.5 rounded-xl btn-cute">
+      <span class="text-base">🗺️</span>
+      <span class="text-[10px] font-bold">攻略</span>
+    </button>
+    <button data-tab-target="rates" class="flex flex-col items-center gap-0.5 text-[#706258] p-1.5 rounded-xl btn-cute">
+      <span class="text-base">💱</span>
+      <span class="text-[10px] font-bold">匯率</span>
+    </button>
+  </nav>
+
+  <!-- ========================================================================= -->
+  <!-- Toast 通知容器 (Toast Notification Container) -->
+  <!-- ========================================================================= -->
+  <div id="toast-container" class="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full">
+    <!-- 由 JS 動態產生 Toast -->
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 核心腳本載入 (Script Modules) -->
+  <!-- ========================================================================= -->
+  <script src="js/itineraryData.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/cloudSync.js"></script>
+  <script src="js/ledger.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+/* ==============================================================================
+   EuroTrip Ledger - 溫暖奶油白可愛風 (Cream & Warm Vanilla Cute Aesthetic)
+   專為手機優先、跨平台 (iOS/Android/Desktop) 量身打造
+   ============================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&display=swap');
+
+:root {
+  --font-main: 'Plus Jakarta Sans', 'Quicksand', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --bg-cream: #FAF7F2;
+  --bg-cream-card: rgba(255, 255, 255, 0.92);
+  --border-cream: #F0E6D8;
+  --text-espresso: #3A302A;
+  --text-cocoa: #706258;
+  --text-latte: #A3968B;
+  --color-caramel: #E88D67;
+  --color-honey: #F3B664;
+  --color-matcha: #68A67D;
+  --color-strawberry: #FF7B90;
+  --color-butter: #FFEAA7;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html {
+  background-color: var(--bg-cream);
+  color: var(--text-espresso);
+  font-family: var(--font-main);
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-cream);
+  color: var(--text-espresso);
+  font-family: var(--font-main);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255, 226, 209, 0.5) 0px, transparent 45%),
+    radial-gradient(at 100% 0%, rgba(254, 237, 213, 0.6) 0px, transparent 45%),
+    radial-gradient(at 50% 100%, rgba(245, 239, 230, 0.8) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(255, 222, 222, 0.35) 0px, transparent 40%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* 奶油可愛風卡片 (Cream Card Style) */
+.cream-card {
+  background: var(--bg-cream-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid var(--border-cream);
+  box-shadow: 0 10px 25px -5px rgba(217, 180, 142, 0.16), 0 6px 12px -4px rgba(217, 180, 142, 0.08);
+  border-radius: 1.25rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cream-card:hover {
+  box-shadow: 0 14px 28px -4px rgba(217, 180, 142, 0.22);
+}
+
+/* 柔和發光邊框 */
+.cream-card-highlight {
+  border: 1.5px solid #FCD5B5;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 237, 0.95));
+}
+
+/* 溫暖漸層文字 */
+.gradient-text-warm {
+  background: linear-gradient(135deg, #D96B43 0%, #E88D67 50%, #D4815B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 可愛活躍按鈕/頁籤 */
+.active-nav-tab {
+  background: #FFF1E6 !important;
+  color: #D96B43 !important;
+  border-color: #FCD5B5 !important;
+  font-weight: 700 !important;
+}
+
+/* 手機底部導覽列 */
+.mobile-bottom-bar {
+  background: rgba(255, 253, 249, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1.5px solid #EFE4D6;
+  box-shadow: 0 -8px 24px -4px rgba(180, 145, 110, 0.12);
+  padding-bottom: max(env(safe-area-inset-bottom, 12px), 8px);
+}
+
+/* 可愛軟萌按鈕動態 */
+.btn-cute {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-cute:active {
+  transform: scale(0.94);
+}
+
+/* 柔和滾動條 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F3EBDD;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D8C7B5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C4B09C;
+}
+
+/* 手機端 Modal Bottom Sheet 動畫 */
+@media (max-width: 640px) {
+  .modal-sheet-content {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 1.75rem !important;
+    border-top-right-radius: 1.75rem !important;
+    max-height: 90vh;
+    margin-bottom: 0 !important;
+    animation: slideUpMobile 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes slideUpMobile {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* 表格在小螢幕的平滑橫向滾動 */
+.table-scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 手機卡片列表點擊反饋 */
+.expense-mobile-card {
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.expense-mobile-card:active {
+  transform: scale(0.98);
+  background-color: #FBF4EA;
+}
