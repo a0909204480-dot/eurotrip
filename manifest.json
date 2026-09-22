@@ -1,0 +1,23 @@
+{
+  "name": "歐陸漫遊 40 天多幣別旅行記帳 🥐",
+  "short_name": "歐洲記帳 🥐",
+  "description": "專為歐洲40天旅行打造的奶油白可愛風多幣別記帳、在地名產探索與願望清單",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF7F2",
+  "theme_color": "#FAF7F2",
+  "icons": [
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
