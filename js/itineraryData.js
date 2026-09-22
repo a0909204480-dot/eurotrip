@@ -1,12 +1,12 @@
 /**
- * 歐洲 40 天多幣別旅行資料集 (EuroTrip Data & Strategy)
- * 包含：40天行程節奏預警、搶票清單、DCC 信用卡防雷、幣別清單與預設資料
+ * 歐洲 40 天多幣別旅行資料集 (EuroTrip 40-Day Data & Pacing Architecture)
+ * 包含：精確三階段行程配置（前期葡西、中期法瑞、後期義大利與東歐）、每日行程、防雷警示與幣別設定
  */
 
 const EuroTripData = {
   // 幣別定義與符號
   currencies: [
-    { code: 'EUR', name: '歐元 (EUR €)', symbol: '€', flag: '🇪🇺', defaultRate: 35.50, countries: '法國, 西班牙, 葡萄牙, 義大利, 奧地利, 德國' },
+    { code: 'EUR', name: '歐元 (EUR €)', symbol: '€', flag: '🇪🇺', defaultRate: 35.50, countries: '法國, 西班牙, 葡萄牙, 義大利, 奧地利' },
     { code: 'CHF', name: '瑞士法郎 (CHF)', symbol: 'CHF', flag: '🇨🇭', defaultRate: 36.80, countries: '瑞士 (蘇黎世, 琉森, 因特拉肯, 策馬特)' },
     { code: 'USD', name: '美元 (USD $)', symbol: '$', flag: '🇺🇸', defaultRate: 32.20, countries: '國際預訂, 跨國保險, 備用外幣' },
     { code: 'CZK', name: '捷克克朗 (CZK)', symbol: 'Kč', flag: '🇨🇿', defaultRate: 1.45, countries: '捷克 (布拉格, CK小鎮 庫倫洛夫)' },
@@ -27,242 +27,126 @@ const EuroTripData = {
     { id: 'misc', name: '其他雜支 (小費/寄行李/廁所零錢)', icon: 'sparkles', color: '#64748B' }
   ],
 
-  // 支付方式預設
-  paymentMethods: [
-    '信用卡A (海外回饋 3% 無上限)',
-    '信用卡B (高額海外刷卡備用卡)',
-    '歐元現金 (EUR Cash)',
-    '瑞郎現金 (CHF Cash)',
-    '捷克克朗現金 (CZK Cash)',
-    'Apple Pay / Google Pay',
-    'Revolut / Wise 跨國多幣借記卡',
-    'LINE Pay / 台灣網銀 (出發前預付)'
-  ],
-
-  // 歐洲 40 天行程節奏分析 (Pacing Strategy)
-  pacingTimeline: [
+  // 40 天行程三大階段核心配置與節奏評估 (3-Phase Trip Architecture)
+  phases: [
     {
-      phase: '第一階段：葡西高強度考驗期',
-      days: 'Day 1 – Day 9',
-      intensity: '高強度 (High Intensity 🔥)',
-      badgeColor: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-      description: '葡萄牙與西班牙地形起伏大、景點密集，含跨國夜巴與每日長距離步行。',
-      warnings: [
+      id: 'phase-1',
+      title: '前期：葡萄牙 ＆ 西班牙',
+      days: 'Day 1 – Day 9 (共 9 天)',
+      paceType: '偏趕緊湊・體力考驗 🏃',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      bannerBg: 'from-[#FFF0F2] via-[#FFF8F8] to-[#FFF4EC]',
+      countries: ['葡萄牙 🇵🇹', '西班牙 🇪🇸'],
+      countryIds: ['PT', 'ES'],
+      summary: '前期節奏偏緊湊，包含波多跨國夜巴銜接與高第建築群高密度步行，需特別注意體力調節與補眠。',
+      coreNotices: [
         {
-          title: '波多 (Porto) -> 馬德里 (Madrid) 跨國夜巴體力復原',
-          detail: '車程約 8 小時且路況顛簸，抵達馬德里當日建議安排下午補眠或只逛麗池公園，嚴禁排滿緊湊行程，避免累積疲憊！'
+          title: '🚌 夜巴銜接白天觀光（Day 4 ➔ Day 5）',
+          type: 'warning',
+          content: '搭乘 8.5 小時夜巴從波多抵達馬德里（08:05 到達），當天通常無法立即入住飯店。若直接接著進行緊湊市區行程，睡眠不足會直接影響後續體力！建議先至飯店寄放行李，找咖啡廳吃早餐放鬆，下午安排麗池公園慢步或短暫補眠。'
         },
         {
-          title: '馬德里與巴塞隆納「每日 20,000+ 步」高步行負擔',
-          detail: '聖家堂、奎爾公園、普拉多博物館等景點腹地廣大，地鐵轉乘樓梯多。強烈建議穿著支撐性好的健走鞋，每晚抬腿放鬆。'
-        },
-        {
-          title: '南歐地中海作息與防扒提醒',
-          detail: '西班牙午餐約 14:00、晚餐 20:30 以後。巴塞隆納蘭布拉大道與地鐵為歐洲扒手最高發區域，防割斜背包請隨時置於胸前！'
+          title: '🚇 馬德里與巴塞隆納換城緊湊（Day 5 – Day 9）',
+          type: 'info',
+          content: '馬德里實際完整觀光僅約 1.5 天（Day 5 下午與 Day 6）；Day 7 早上搭高鐵至巴塞隆納；Day 8 需走完聖家堂登塔、桂爾公園與巴特婁之家。高第建築點與點之間需頻繁地鐵轉乘，且非常耗腿力，請務必穿著支撐性強的健走鞋！'
         }
       ]
     },
     {
-      phase: '第二階段：法瑞義東歐平穩深度期',
-      days: 'Day 10 – Day 40',
-      intensity: '平穩節奏 (Steady Pace 🌿)',
-      badgeColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-      description: '節奏轉為大城市連住 4 晚定點深度遊，保留彈性緩衝日，身心負擔大幅減輕。',
-      warnings: [
+      id: 'phase-2',
+      title: '中期：法國 ＆ 瑞士',
+      days: 'Day 10 – Day 17 (共 8 天)',
+      paceType: '舒適轉換・放慢呼吸 🌿',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      bannerBg: 'from-[#EBF7EE] via-[#F4FAF5] to-[#FFFDF9]',
+      countries: ['法國 🇫🇷', '瑞士 🇨🇭'],
+      countryIds: ['FR', 'CH'],
+      summary: '中期進入大城連住深度遊，節奏放緩，享受巴黎人文藝術與阿爾卑斯壯麗雪山。',
+      coreNotices: [
         {
-          title: '巴黎 (4晚) & 瑞士 (4晚) & 維也納 (4晚) 定點連住優勢',
-          detail: '不用天天拖行李換飯店！利用放射狀一日遊玩法（例如琉森住 4 晚遊皮拉圖斯山/鐵力士山），保留體力享受生活。'
+          title: '🎨 巴黎 4 晚定點慢遊（Day 10 – Day 13）',
+          type: 'success',
+          content: '羅浮宮、奧賽美術館、蒙馬特聖心堂與塞納河遊船分散在 4 天，節奏剛剛好，不會走馬看花，有充裕時間坐在露天咖啡館享受巴黎氛圍與藥妝購物。'
         },
         {
-          title: '因特拉肯 (Interlaken) 跳傘氣候緩衝機制',
-          detail: '阿爾卑斯山區氣候多變，跳傘與滑翔翼務必預留「至少 2 天彈性窗口」，首日遇雨或起霧可順延至隔日清晨。'
+          title: '🪂 瑞士 4 晚與跳傘彈性備案（Day 14 – Day 17）',
+          type: 'success',
+          content: '因特拉肯預留跳傘備案日是絕佳安排！高山氣候多變，有備用天數可應對天候。高山健行與小鎮散步動線順暢，有足夠空間放慢呼吸。'
+        }
+      ]
+    },
+    {
+      id: 'phase-3',
+      title: '後期：義大利 ＆ 東歐四國',
+      days: 'Day 18 – Day 40 (共 23 天)',
+      paceType: '經典適中・採買退稅收尾 🏰',
+      badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+      bannerBg: 'from-[#FFF8E7] via-[#FFFBF0] to-[#FFF4EC]',
+      countries: ['義大利 🇮🇹', '波蘭 🇵🇱', '匈牙利 🇭🇺', '捷克 🇨🇿', '奧地利 🇦🇹'],
+      countryIds: ['IT', 'PL', 'HU', 'CZ', 'AT'],
+      summary: '義大利經典高鐵銜接，東歐大城慢步，最後在維也納留 4 晚從容應對名產採買與退稅。',
+      coreNotices: [
+        {
+          title: '🚄 義大利三城經典高鐵動線（Day 18 – Day 24）',
+          type: 'info',
+          content: '威尼斯 2 晚、佛羅倫斯 2 晚、羅馬 3 晚，均為 1.5–2 小時高鐵銜接，屬於標準的經典順暢走法，免去長途拉車之苦。'
         },
         {
-          title: '庫倫洛夫 (CK小鎮) 門對門穿梭巴士 (Door-to-Door Shuttle)',
-          detail: 'CK 小鎮皆為石板路，強烈預訂 Bean Shuttle 或 CK Shuttle 直接從維也納/薩爾斯堡飯店門口接駁至 CK 民宿，避免拖行李走在碎石路輪胎報銷。'
-        },
-        {
-          title: '東歐貨幣（捷克 CZK / 波蘭 PLN / 匈牙利 HUF）刷卡攻略',
-          detail: '東歐普遍支援感應刷卡，換少量現金即可（如上廁所 10-20 CZK）。在東歐刷卡一樣選當地幣別結帳！'
+          title: '🏰 東歐慢遊與維也納退稅採買收尾（Day 25 – Day 40）',
+          type: 'success',
+          content: '克拉科夫、布達佩斯、布拉格各留 3 晚；CK 小鎮住 2 晚且利用接駁專車（Door-to-Door Shuttle）；維也納留 4 晚從容應對伴手禮大採購與機場退稅，整體節奏非常舒適，不易感到倉促。'
         }
       ]
     }
   ],
 
-  // 搶票與早鳥監控清單 (Early Bird Booking Watchlist)
-  bookingWatchlist: [
-    {
-      id: 'tgv-paris-swiss',
-      title: '巴黎 ➔ 瑞士 (蘇黎世/巴塞爾) TGV Lyria 高鐵',
-      category: '火車高鐵',
-      recommendedAdvance: '出發前 3~4 個月搶早鳥票',
-      targetCity: '巴黎 / 瑞士',
-      officialUrl: 'https://www.sncf-connect.com/',
-      priceEst: '約 29~65 EUR (現場買破 150 EUR)',
-      tips: '法鐵早鳥票價差極大，SNCF Connect 官網準時開搶可省下超過 60% 交通費。',
-      status: '待開搶',
-      isBooked: false
-    },
-    {
-      id: 'ave-madrid-barca',
-      title: '馬德里 ➔ 巴塞隆納 高速鐵路 (Renfe AVE / Iryo / Ouigo)',
-      category: '火車高鐵',
-      recommendedAdvance: '出發前 2~3 個月',
-      targetCity: '西班牙',
-      officialUrl: 'https://www.iryo.eu/',
-      priceEst: '約 18~45 EUR',
-      tips: '西班牙高鐵目前有 Renfe、Iryo、Ouigo 三家競爭，使用 Omio 或 Trainline 比價，Iryo 車廂最新最舒適。',
-      status: '待開搶',
-      isBooked: false
-    },
-    {
-      id: 'eurocity-lucerne-venice',
-      title: '琉森/米蘭 ➔ 威尼斯 EuroCity / Frecciarossa 跨國景觀列車',
-      category: '火車高鐵',
-      recommendedAdvance: '出發前 2 個月',
-      targetCity: '瑞士 / 義大利',
-      officialUrl: 'https://www.trenitalia.com/',
-      priceEst: '約 35~50 EUR',
-      tips: '穿越阿爾卑斯山脈景觀壯麗，義大利國鐵 Trenitalia 早鳥 Super Economy 票價最划算。',
-      status: '待開搶',
-      isBooked: false
-    },
-    {
-      id: 'budget-flight-baggage',
-      title: '歐洲境內廉航加購托運行李 (Ryanair / EasyJet / Vueling)',
-      category: '廉航行李',
-      recommendedAdvance: '訂機票時「同步加購」',
-      targetCity: '跨國飛行',
-      officialUrl: 'https://www.ryanair.com/',
-      priceEst: '約 25~40 EUR (機場現場加收 70+ EUR)',
-      tips: '歐洲廉航現場加購行李罰金極高！手提行李尺寸檢查極嚴（特別是 Ryanair），務必在官網提前買足 20kg 托運額度。',
-      status: '待開搶',
-      isBooked: false
-    },
-    {
-      id: 'sagrada-familia-tower',
-      title: '巴塞隆納聖家堂登塔門票 (Sagrada Família + Towers)',
-      category: '門票景點',
-      recommendedAdvance: '出發前 2 個月 (極度熱門)',
-      targetCity: '巴塞隆納',
-      officialUrl: 'https://sagradafamilia.org/en/tickets',
-      priceEst: '約 36 EUR (含登塔與語音導覽)',
-      tips: '登塔推薦「受難立面 (Passion Façade)」，下午光線佳且可搭電梯上樓走螺旋梯下樓。',
-      status: '待開搶',
-      isBooked: false
-    },
-    {
-      id: 'vatican-museum',
-      title: '羅馬梵蒂岡博物館與西斯汀禮拜堂 (Vatican Museums)',
-      category: '門票景點',
-      recommendedAdvance: '出發前 60 天 (官網搶票秒殺)',
-      targetCity: '羅馬',
-      officialUrl: 'https://tickets.museivaticani.va/',
-      priceEst: '約 22 EUR (現場排隊 3 小時起跳)',
-      tips: '建議預訂早晨 08:00 第一梯次或週五夜間開放場次，人潮最少，體驗米開朗基羅《創世紀》真跡。',
-      status: '待開搶',
-      isBooked: false
-    },
-    {
-      id: 'auschwitz-tour',
-      title: '波蘭奧斯威辛集中營官方英語導覽 (Auschwitz-Birkenau)',
-      category: '門票景點',
-      recommendedAdvance: '出發前 90 天',
-      targetCity: '克拉科夫',
-      officialUrl: 'https://visit.auschwitz.org/',
-      priceEst: '約 90~110 PLN (約 800 TWD)',
-      tips: '歷史深度極高，官方 Educator 導覽名額有限，強烈建議開賣當天立即預約上午英文團。',
-      status: '待開搶',
-      isBooked: false
-    },
-    {
-      id: 'interlaken-skydive',
-      title: '瑞士因特拉肯阿爾卑斯山雪山高空跳傘 (Skydive Interlaken)',
-      category: '極限運動',
-      recommendedAdvance: '出發前 1~2 個月',
-      targetCity: '瑞士因特拉肯',
-      officialUrl: 'https://www.skydiveinterlaken.ch/',
-      priceEst: '約 450~520 CHF (含高空攝影)',
-      tips: '飛越少女峰與雙湖景觀，震撼力一生必試！務必預留前後 1~2 天作為天候候補日。',
-      status: '待開搶',
-      isBooked: false
-    }
-  ],
+  // 40 天精準行程列表
+  dailyItinerary: [
+    // 前期 (Day 1 - 9)
+    { day: 1, phaseId: 'phase-1', country: '葡萄牙', city: '里斯本 (Lisbon)', stay: '里斯本 1/2晚', highlight: '熱羅尼莫斯修道院、貝倫百年蛋撻店、28號復古電車', tag: '市區經典' },
+    { day: 2, phaseId: 'phase-1', country: '葡萄牙', city: '辛特拉 ➔ 里斯本', stay: '里斯本 2/2晚', highlight: '佩納宮彩色城堡、羅卡角歐陸最西端看大西洋日落', tag: '近郊一日' },
+    { day: 3, phaseId: 'phase-1', country: '葡萄牙', city: '波多 (Porto)', stay: '波多 1/1晚', highlight: '路易一世大橋、萊羅書店、杜羅河畔酒莊品波特酒', tag: '酒莊水岸' },
+    { day: 4, phaseId: 'phase-1', country: '葡萄牙 ➔ 西班牙', city: '波多 ➔ 跨國夜巴', stay: '🚌 跨國夜巴 (車上過夜)', highlight: '波多老城最後漫步，晚間搭乘 8.5 小時跨國夜巴前往馬德里', tag: '⚠️ 跨國夜巴' },
+    { day: 5, phaseId: 'phase-1', country: '西班牙', city: '馬德里 (Madrid)', stay: '馬德里 1/2晚', highlight: '清晨 08:05 抵達馬德里 ➔ 飯店寄放行李、早午餐補眠、午後麗池公園散步', tag: '⚠️ 補眠調息' },
+    { day: 6, phaseId: 'phase-1', country: '西班牙', city: '馬德里 (Madrid)', stay: '馬德里 2/2晚', highlight: '馬德里皇宮、普拉多博物館、聖米格爾市場品嚐 Tapas', tag: '藝術宮殿' },
+    { day: 7, phaseId: 'phase-1', country: '西班牙', city: '馬德里 ➔ 巴塞隆納', stay: '巴塞隆納 1/3晚', highlight: '搭乘 AVE 高鐵直達巴塞隆納，午後蘭布拉大道與哥德區巡禮（注意防扒）', tag: '高鐵換城' },
+    { day: 8, phaseId: 'phase-1', country: '西班牙', city: '巴塞隆納 (Barcelona)', stay: '巴塞隆納 2/3晚', highlight: '高第朝聖：聖家堂登塔 ➔ 桂爾公園 ➔ 巴特婁之家（地鐵頻繁轉乘、體力大考驗）', tag: '🔥 2萬步高第' },
+    { day: 9, phaseId: 'phase-1', country: '西班牙', city: '巴塞隆納 (Barcelona)', stay: '巴塞隆納 3/3晚', highlight: '米拉之家、加泰隆尼亞音樂宮、巴塞隆納海灘放鬆品嚐海鮮飯', tag: '地中海風情' },
 
-  // 信用卡防雷與 DCC 警示指南
-  creditCardGuide: {
-    dccWarning: {
-      title: '⚠️ 嚴禁動態貨幣轉換 (DCC, Dynamic Currency Conversion)',
-      subtitle: '歐洲刷卡結帳第一鐵律：請一律堅定選擇「當地貨幣 (EUR / CHF / CZK / PLN)」！',
-      explanation: '在歐洲刷卡時，刷卡機 (POS機) 若跳出「以 TWD 新台幣結帳」或「以 EUR 歐元結帳」，如果選了 TWD，商家收單銀行會以極差的黑市匯率轉換，並額外加收 5% ~ 10% 的 DCC 手續費！',
-      goldenRule: '「在法國/西班牙刷 EUR」、「在瑞士刷 CHF」、「在捷克刷 CZK」—— 永遠只刷當地貨幣，由台灣發卡銀行按國際威士/萬事達公定匯率結算，才能拿到最優匯率與海外回饋！'
-    },
-    cardTips: [
-      {
-        icon: 'credit-card',
-        title: '挑選海外消費回饋 > 3% 的信用卡',
-        content: '台灣信用卡海外刷卡會收取 1.5% 國際交易手續費。選擇海外回饋 3% 以上且無上限的卡片（如富邦J卡、台新FlyGo、玉山熊本熊/星展eco等），倒賺 1.5%+ 淨回饋！'
-      },
-      {
-        icon: 'shield-alert',
-        title: '隨身準備 2~3 張不同發卡組織的實體卡片',
-        content: '主刷卡、備用卡（Mastercard + Visa 各一）、跨國提款卡分開存放（一張放身上防割包、一張放飯店行李箱保險箱），避免單一卡片被吞卡、消磁或被鎖卡時陷入困境。'
-      },
-      {
-        icon: 'smartphone',
-        title: '出發前開通海外交易與預借現金密碼 (PIN碼)',
-        content: '歐洲火車售票機、無人加油站、地鐵加值機常常要求輸入 4 位數或 6 位數 PIN 碼。出發前請聯絡發卡銀行客服設定「預借現金密碼」，此密碼即為歐洲無人機器的授權碼。'
-      },
-      {
-        icon: 'lock',
-        title: '防扒手與感應側錄防護 (RFID 防盜防割)',
-        content: '巴黎地鐵、巴塞隆納蘭布拉大道、羅馬競技場為扒手熱區。請使用具備 RFID 防側錄功能的貼身隱形腰包，手機加裝防搶掛繩，切勿將皮夾置於後褲袋。'
-      }
-    ]
-  },
+    // 中期 (Day 10 - 17)
+    { day: 10, phaseId: 'phase-2', country: '法國', city: '巴黎 (Paris)', stay: '巴黎 1/4晚', highlight: '飛抵巴黎 ➔ 塞納河遊船欣賞艾菲爾鐵塔點燈夜景', tag: '巴黎浪漫' },
+    { day: 11, phaseId: 'phase-2', country: '法國', city: '巴黎 (Paris)', stay: '巴黎 2/4晚', highlight: '羅浮宮鎮館三寶（蒙娜麗莎/勝利女神/維納斯）➔ 杜樂麗花園午後漫步', tag: '羅浮宮巡禮' },
+    { day: 12, phaseId: 'phase-2', country: '法國', city: '巴黎 (Paris)', stay: '巴黎 3/4晚', highlight: '奧賽美術館印象派大作 ➔ 瑪黑區小眾選品與左岸 Citypharma 藥妝掃貨', tag: '奧賽與購物' },
+    { day: 13, phaseId: 'phase-2', country: '法國', city: '巴黎 (Paris)', stay: '巴黎 4/4晚', highlight: '蒙馬特聖心堂俯瞰巴黎全景 ➔ 愛牆 ➔ 香榭麗舍大道凱旋門', tag: '聖心堂美景' },
+    { day: 14, phaseId: 'phase-2', country: '瑞士', city: '巴黎 ➔ 瑞士琉森', stay: '琉森/因特拉肯 1/4晚', highlight: '搭乘 TGV Lyria 高鐵進瑞士 ➔ 琉森卡貝爾木橋與垂死獅子像', tag: '阿爾卑斯進駐' },
+    { day: 15, phaseId: 'phase-2', country: '瑞士', city: '琉森 / 皮拉圖斯山', stay: '琉森/因特拉肯 2/4晚', highlight: '金色環遊搭乘世界最陡齒軌火車登皮拉圖斯山頂俯瞰琉森湖', tag: '雪山湖泊' },
+    { day: 16, phaseId: 'phase-2', country: '瑞士', city: '因特拉肯 (Interlaken)', stay: '因特拉肯 3/4晚', highlight: '因特拉肯雪山高空跳傘（首選日）➔ 哈德昆觀景台俯瞰雙湖', tag: '🪂 跳傘首選' },
+    { day: 17, phaseId: 'phase-2', country: '瑞士', city: '格林德瓦 / 少女峰', stay: '因特拉肯 4/4晚', highlight: '艾格快線直達歐洲之巔少女峰健行（跳傘天候彈性備案日）', tag: '🌿 備案放慢' },
 
-  // 40 天行程範本參考
-  sampleDays: [
-    { day: 1, country: '葡萄牙', city: '里斯本 (Lisbon)', highlight: '熱羅尼莫斯修道院、百年蛋撻店、28號復古電車', intensity: '高' },
-    { day: 2, country: '葡萄牙', city: '辛特拉 (Sintra)', highlight: '佩納宮、羅卡角歐陸最西端日落', intensity: '高' },
-    { day: 3, country: '葡萄牙', city: '波多 (Porto)', highlight: '路易一世大橋、萊羅書店、杜羅河遊船', intensity: '中' },
-    { day: 4, country: '葡萄牙/西班牙', city: '波多 ➔ 馬德里', highlight: '跨國夜巴挑戰 / 抵達馬德里麗池公園散步復原', intensity: '高 (夜巴)' },
-    { day: 5, country: '西班牙', city: '馬德里 (Madrid)', highlight: '馬德里皇宮、普拉多博物館、聖米格爾市場', intensity: '高 (2萬步)' },
-    { day: 6, country: '西班牙', city: '塞哥維亞 / 托雷多', highlight: '古羅馬水道橋、烤乳豬一日遊', intensity: '中' },
-    { day: 7, country: '西班牙', city: '巴塞隆納 (Barcelona)', highlight: 'AVE 高鐵前往巴塞隆納、蘭布拉大道防扒巡禮', intensity: '中' },
-    { day: 8, country: '西班牙', city: '巴塞隆納', highlight: '聖家堂登塔、米拉之家、巴特婁之家高第建築巡禮', intensity: '高 (2萬步)' },
-    { day: 9, country: '西班牙', city: '巴塞隆納', highlight: '奎爾公園、蒙特惠奇城堡、哥德區小巷', intensity: '中' },
-    { day: 10, country: '法國', city: '巴黎 (Paris) 4N 第1天', highlight: '飛抵巴黎戴高樂機場、羅浮宮夜景散步', intensity: '平穩' },
-    { day: 11, country: '法國', city: '巴黎 4N 第2天', highlight: '艾菲爾鐵塔、塞納河遊船、凱旋門、香榭大道', intensity: '平穩' },
-    { day: 12, country: '法國', city: '巴黎 4N 第3天', highlight: '奧賽美術館、瑪黑區早午餐、巴黎聖母院', intensity: '平穩' },
-    { day: 13, country: '法國', city: '巴黎 4N 第4天', highlight: '凡爾賽宮鏡廳與花園漫步、蒙馬特聖心堂', intensity: '平穩' },
-    { day: 14, country: '瑞士', city: '蘇黎世 ➔ 琉森 (Luzern) 4N', highlight: '搭乘 TGV Lyria 進瑞士、琉森卡貝爾橋、垂死獅子像', intensity: '平穩' },
-    { day: 15, country: '瑞士', city: '琉森 (皮拉圖斯山)', highlight: '金色環遊世界最陡峭齒軌火車、皮拉圖斯山頂俯瞰', intensity: '平穩' },
-    { day: 16, country: '瑞士', city: '因特拉肯 (Interlaken)', highlight: '阿爾卑斯高空跳傘 (預留首選日)、哈德昆觀景台', intensity: '平穩 (跳傘)' },
-    { day: 17, country: '瑞士', city: '格林德瓦 / 少女峰', highlight: '艾格快線登歐洲之巔少女峰 (跳傘備用緩衝日)', intensity: '平穩 (彈性日)' },
-    { day: 18, country: '瑞士/義大利', city: '策馬特 ➔ 米蘭', highlight: '馬特洪峰冰川天堂、跨國列車前往時尚之都米蘭', intensity: '中' },
-    { day: 19, country: '義大利', city: '米蘭 ➔ 威尼斯 (Venice)', highlight: '米蘭大教堂登頂、艾曼紐二世迴廊、前往水都威尼斯', intensity: '平穩' },
-    { day: 20, country: '義大利', city: '威尼斯 (Venice)', highlight: '聖馬可廣場、貢多拉鳳尾船、彩色島 (Burano)', intensity: '平穩' },
-    { day: 21, country: '義大利', city: '佛羅倫斯 (Florence)', highlight: '聖母百花大教堂、烏菲茲美術館、托斯卡尼丁骨大牛排', intensity: '平穩' },
-    { day: 22, country: '義大利', city: '比薩 / 佛羅倫斯', highlight: '比薩斜塔趣味擺拍、米開朗基羅廣場看浪漫日落', intensity: '平穩' },
-    { day: 23, country: '義大利', city: '羅馬 (Rome) 4N 第1天', highlight: '羅馬競技場、古羅馬廣場、君士坦丁凱旋門', intensity: '中' },
-    { day: 24, country: '義大利/梵蒂岡', city: '羅馬 4N 第2天', highlight: '梵蒂岡博物館早鳥入場、西斯汀禮拜堂、聖彼得大教堂', intensity: '平穩 (早鳥)' },
-    { day: 25, country: '義大利', city: '羅馬 4N 第3天', highlight: '萬神殿、特雷維羅馬許願池投硬幣、西班牙階梯', intensity: '平穩' },
-    { day: 26, country: '義大利', city: '羅馬 4N 第4天', highlight: '聖天使城堡、特拉斯提弗列品嚐正宗義大利麵', intensity: '平穩' },
-    { day: 27, country: '奧地利', city: '維也納 (Vienna) 4N 第1天', highlight: '跨國飛行抵達維也納、聖史蒂芬大教堂', intensity: '平穩' },
-    { day: 28, country: '奧地利', city: '維也納 4N 第2天', highlight: '美泉宮 (熊布朗宮) 皇家花園、中央咖啡館品薩赫蛋糕', intensity: '平穩' },
-    { day: 29, country: '奧地利', city: '維也納 4N 第3天', highlight: '霍夫堡宮、藝術史博物館、金色大廳古典音樂會', intensity: '平穩' },
-    { day: 30, country: '奧地利', city: '維也納 4N 第4天 / 瓦豪河谷', highlight: '瓦豪河谷多瑙河遊船、梅爾克修道院一日遊', intensity: '平穩' },
-    { day: 31, country: '奧地利/捷克', city: '薩爾斯堡 ➔ CK小鎮', highlight: '莫札特故居、搭乘 CK Shuttle 門對門專車直達庫倫洛夫', intensity: '平穩 (Shuttle)' },
-    { day: 32, country: '捷克', city: '庫倫洛夫 (Český Krumlov)', highlight: '彩繪塔登頂、伏爾塔瓦河泛舟、中世紀城堡漫步', intensity: '平穩' },
-    { day: 33, country: '捷克', city: '布拉格 (Prague) 3N 第1天', highlight: '查理大橋清晨美景、舊城廣場天文鐘報時', intensity: '平穩' },
-    { day: 34, country: '捷克', city: '布拉格 3N 第2天', highlight: '布拉格城堡區、聖維特大教堂、黃金巷卡夫卡故居', intensity: '平穩' },
-    { day: 35, country: '捷克', city: '布拉格 3N 第3天 / 庫特納霍拉', highlight: '人骨教堂一日遊、品嚐捷克傳統烤鴨與皮爾森啤酒', intensity: '平穩' },
-    { day: 36, country: '波蘭', city: '克拉科夫 (Krakow) 3N 第1天', highlight: '搭乘跨國列車前往波蘭克拉科夫、中央市集廣場', intensity: '平穩' },
-    { day: 37, country: '波蘭', city: '克拉科夫 (奧斯威辛)', highlight: '奧斯威辛-比克瑙集中營官方導覽 (歷史深刻體驗)', intensity: '平穩 (早鳥預約)' },
-    { day: 38, country: '波蘭', city: '克拉科夫 (維利奇卡鹽礦)', highlight: '世界遺產維利奇卡地下鹽礦地下教堂與鹽雕奇蹟', intensity: '平穩' },
-    { day: 39, country: '波蘭/回程', city: '華沙 / 轉機回程', highlight: '蕭邦公園、瓦津基宮、免稅店最後伴手禮採購', intensity: '平穩' },
-    { day: 40, country: '台灣', city: '台北 (Taipei)', highlight: '平安抵達台灣，完成 40 天歐陸壯遊記帳總結算！🎉', intensity: '圓滿完成' }
+    // 後期 (Day 18 - 40)
+    { day: 18, phaseId: 'phase-3', country: '義大利', city: '瑞士 ➔ 威尼斯 (Venice)', stay: '威尼斯 1/2晚', highlight: '跨國火車前往水都威尼斯 ➔ 聖馬可廣場與貢多拉鳳尾船穿梭運河', tag: '水都威尼斯' },
+    { day: 19, phaseId: 'phase-3', country: '義大利', city: '威尼斯 (Venice)', stay: '威尼斯 2/2晚', highlight: '彩色島 (Burano) 蕾絲童話小鎮 ➔ 總督宮與嘆息橋夕陽', tag: '彩色島慢步' },
+    { day: 20, phaseId: 'phase-3', country: '義大利', city: '威尼斯 ➔ 佛羅倫斯', stay: '佛羅倫斯 1/2晚', highlight: '高鐵 2h 抵達文藝復興之都 ➔ 聖母百花大教堂登頂 ➔ 享用托斯卡尼丁骨大牛排', tag: '百花大教堂' },
+    { day: 21, phaseId: 'phase-3', country: '義大利', city: '佛羅倫斯 (Florence)', stay: '佛羅倫斯 2/2晚', highlight: '烏菲茲美術館 ➔ SMN 百年修道院藥局 ➔ 米開朗基羅廣場看日落', tag: '文藝復興' },
+    { day: 22, phaseId: 'phase-3', country: '義大利', city: '佛羅倫斯 ➔ 羅馬', stay: '羅馬 1/3晚', highlight: '高鐵 1.5h 直達永恆之城羅馬 ➔ 萬神殿 ➔ 特雷維許願池投硬幣', tag: '古羅馬' },
+    { day: 23, phaseId: 'phase-3', country: '義大利/梵蒂岡', city: '羅馬 (Rome)', stay: '羅馬 2/3晚', highlight: '梵蒂岡博物館早鳥入場 ➔ 西斯汀禮拜堂《創世紀》➔ 聖彼得大教堂', tag: '梵蒂岡朝聖' },
+    { day: 24, phaseId: 'phase-3', country: '義大利', city: '羅馬 (Rome)', stay: '羅馬 3/3晚', highlight: '羅馬競技場與古羅馬廣場深度導覽 ➔ 西班牙階梯品嚐義式冰淇淋', tag: '競技場經典' },
+    { day: 25, phaseId: 'phase-3', country: '波蘭', city: '羅馬 ➔ 克拉科夫', stay: '克拉科夫 1/3晚', highlight: '搭機前往波蘭文化古都克拉科夫 ➔ 中央市集廣場與紡織會館', tag: '波蘭古城' },
+    { day: 26, phaseId: 'phase-3', country: '波蘭', city: '克拉科夫 (Krakow)', stay: '克拉科夫 2/3晚', highlight: '奧斯威辛-比克瑙集中營官方導覽（沉痛歷史深刻體驗）', tag: '歷史巡禮' },
+    { day: 27, phaseId: 'phase-3', country: '波蘭', city: '克拉科夫 (Krakow)', stay: '克拉科夫 3/3晚', highlight: '維利奇卡地下鹽礦地下教堂奇蹟 ➔ 瓦維爾城堡', tag: '地下鹽礦' },
+    { day: 28, phaseId: 'phase-3', country: '匈牙利', city: '克拉科夫 ➔ 布達佩斯', stay: '布達佩斯 1/3晚', highlight: '前往多瑙河明珠布達佩斯 ➔ 塞切尼鏈橋與國會大廈璀璨夜景遊船', tag: '多瑙河夜景' },
+    { day: 29, phaseId: 'phase-3', country: '匈牙利', city: '布達佩斯 (Budapest)', stay: '布達佩斯 2/3晚', highlight: '漁夫堡童話迴廊看日出 ➔ 馬加什教堂 ➔ 布達皇宮全景', tag: '漁夫堡童話' },
+    { day: 30, phaseId: 'phase-3', country: '匈牙利', city: '布達佩斯 (Budapest)', stay: '布達佩斯 3/3晚', highlight: '塞切尼百年露天溫泉放鬆 ➔ 紐約宮殿咖啡館品嚐貴婦下午茶', tag: '溫泉與咖啡' },
+    { day: 31, phaseId: 'phase-3', country: '捷克', city: '布達佩斯 ➔ 布拉格', stay: '布拉格 1/3晚', highlight: '抵達百塔之城布拉格 ➔ 查理大橋夕陽漫步 ➔ 舊城廣場天文鐘', tag: '百塔之城' },
+    { day: 32, phaseId: 'phase-3', country: '捷克', city: '布拉格 (Prague)', stay: '布拉格 2/3晚', highlight: '布拉格城堡區 ➔ 聖維特大教堂 ➔ 黃金巷 ➔ 提恩教堂後菠丹妮總店採購', tag: '城堡與菠丹妮' },
+    { day: 33, phaseId: 'phase-3', country: '捷克', city: '布拉格 (Prague)', stay: '布拉格 3/3晚', highlight: '高堡區俯瞰伏爾塔瓦河 ➔ 佩特任山纜車 ➔ 享用捷克傳統烤鴨配皮爾森啤酒', tag: '布拉格慢步' },
+    { day: 34, phaseId: 'phase-3', country: '捷克', city: '布拉格 ➔ CK 小鎮', stay: '庫倫洛夫 1/2晚', highlight: '搭乘 Door-to-Door Shuttle 接駁專車直達庫倫洛夫 ➔ 彩繪塔俯瞰中世紀紅瓦屋頂', tag: '🚐 接駁專車' },
+    { day: 35, phaseId: 'phase-3', country: '捷克', city: '庫倫洛夫 (Český Krumlov)', stay: '庫倫洛夫 2/2晚', highlight: 'CK 城堡花園漫步 ➔ 伏爾塔瓦河畔咖啡館放空發呆，享受童話小鎮夜景', tag: '童話小鎮慢活' },
+    { day: 36, phaseId: 'phase-3', country: '奧地利', city: 'CK 小鎮 ➔ 維也納', stay: '維也納 1/4晚', highlight: '接駁專車前往音樂之都維也納 ➔ 聖史蒂芬大教堂 ➔ 葛拉本大街', tag: '音樂之都' },
+    { day: 37, phaseId: 'phase-3', country: '奧地利', city: '維也納 (Vienna)', stay: '維也納 2/4晚', highlight: '美泉宮（熊布朗宮）皇家花園與鏡廳 ➔ 薩赫飯店品嚐正宗薩赫蛋糕', tag: '美泉宮皇家' },
+    { day: 38, phaseId: 'phase-3', country: '奧地利', city: '維也納 (Vienna)', stay: '維也納 3/4晚', highlight: '藝術史博物館欣賞名畫 ➔ 霍夫堡宮 ➔ 莫札特藍色巧克力與名產採購', tag: '伴手禮採購' },
+    { day: 39, phaseId: 'phase-3', country: '奧地利', city: '維也納 (Vienna)', stay: '維也納 4/4晚', highlight: '市區最後採買整理行李 ➔ 提前前往維也納國際機場辦理全歐退稅與託運', tag: '💶 機場退稅' },
+    { day: 40, phaseId: 'phase-3', country: '台灣', city: '台北 (Taipei)', stay: '溫暖的家 🏠', highlight: '平安抵達台灣！完成 40 天歐陸壯遊記帳總結算！🎉', tag: '🎉 圓滿賦歸' }
   ]
 };
 

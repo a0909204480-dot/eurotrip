@@ -1,6 +1,6 @@
 /**
  * 應用程式核心控制器 (App Coordinator) - 奶油白可愛風
- * 負責：UI 頁籤切換、互動對話框、表單即時折算校驗、自訂刪除確認 Modal、早鳥清單轉記帳、通知 Toast 提示
+ * 負責：UI 頁籤切換、互動對話框、表單即時折算校驗、自訂刪除確認 Modal、願望清單轉記帳、通知 Toast 提示
  */
 
 class AppController {
@@ -8,7 +8,6 @@ class AppController {
     this.currentTab = 'dashboard';
     this.editingExpenseId = null;
     this.pendingDeleteId = null;
-    this.bookings = [];
 
     this.init();
   }
@@ -17,11 +16,16 @@ class AppController {
   async init() {
     this.setupEventListeners();
     this.setupCurrencySelectors();
-    this.renderPacingGuide();
-    await this.renderBookings();
-    this.renderCreditCardGuide();
     this.renderExchangeRatesPage();
     this.bindCloudSyncStatus();
+
+    // 初始化行程與願望名產清單
+    if (window.itineraryManager) {
+      window.itineraryManager.init();
+    }
+    if (window.wishlistManager) {
+      window.wishlistManager.renderAll();
+    }
 
     // 啟動時自動嘗試拉取一次即時匯率
     window.currencyManager.fetchLiveRates().then(res => {
@@ -30,6 +34,8 @@ class AppController {
       }
       this.renderExchangeRatesPage();
       window.ledgerManager.renderSummary();
+      if (window.itineraryManager) window.itineraryManager.renderAll();
+      if (window.wishlistManager) window.wishlistManager.renderAll();
     });
 
     // 監聽匯率與記帳連動
@@ -37,6 +43,7 @@ class AppController {
       this.renderExchangeRatesPage();
       window.ledgerManager.renderSummary();
       this.updateExpenseFormTwdEstimate();
+      if (window.wishlistManager) window.wishlistManager.renderAll();
     });
   }
 
@@ -118,6 +125,12 @@ class AppController {
     const calcFromCur = document.getElementById('calc-from-currency');
     if (calcAmount) calcAmount.addEventListener('input', () => this.runQuickCalculator());
     if (calcFromCur) calcFromCur.addEventListener('change', () => this.runQuickCalculator());
+
+    // 6. 退稅計算機互動
+    const taxCountry = document.getElementById('calc-tax-country');
+    const taxAmount = document.getElementById('calc-tax-amount');
+    if (taxCountry) taxCountry.addEventListener('change', () => window.wishlistManager.updateTaxCalculator());
+    if (taxAmount) taxAmount.addEventListener('input', () => window.wishlistManager.updateTaxCalculator());
   }
 
   // 切換主要頁籤
@@ -150,6 +163,9 @@ class AppController {
     // 若切換至儀表板，重新渲染圖表以修正尺寸
     if (tabId === 'dashboard') {
       window.ledgerManager.renderCharts();
+    } else if (tabId === 'wishlist') {
+      if (window.itineraryManager) window.itineraryManager.renderAll();
+      if (window.wishlistManager) window.wishlistManager.renderAll();
     }
 
     // 手機平滑滾動至頂端
@@ -162,6 +178,7 @@ class AppController {
     const formCurSelect = document.getElementById('form-currency');
     const filterCurSelect = document.getElementById('filter-currency');
     const calcCurSelect = document.getElementById('calc-from-currency');
+    const wishCurSelect = document.getElementById('wish-currency-select');
 
     const optionsHtml = currencies.map(c => 
       `<option value="${c.code}">${c.flag} ${c.code} - ${c.name}</option>`
@@ -169,6 +186,7 @@ class AppController {
 
     if (formCurSelect) formCurSelect.innerHTML = optionsHtml;
     if (calcCurSelect) calcCurSelect.innerHTML = optionsHtml;
+    if (wishCurSelect) wishCurSelect.innerHTML = optionsHtml;
     if (filterCurSelect) {
       filterCurSelect.innerHTML = `<option value="ALL">全部幣別</option>` + optionsHtml;
     }
@@ -370,7 +388,7 @@ class AppController {
   }
 
   // -------------------------------------------------------------
-  // 自訂可愛刪除確認 Modal (取代原生 confirm，確保手機端100%相容)
+  // 自訂可愛刪除確認 Modal
   // -------------------------------------------------------------
   askDeleteExpense(id, itemName) {
     this.pendingDeleteId = id;
@@ -406,172 +424,6 @@ class AppController {
       this.showToast('🗑️ 帳目已成功刪除！', 'info');
     } catch (err) {
       this.showToast(`刪除失敗: ${err.message}`, 'error');
-    }
-  }
-
-  // -------------------------------------------------------------
-  // 40 天行程節奏與指南渲染
-  // -------------------------------------------------------------
-  renderPacingGuide() {
-    const container = document.getElementById('pacing-timeline-container');
-    if (!container) return;
-
-    const timeline = window.EuroTripData.pacingTimeline;
-    container.innerHTML = timeline.map(item => `
-      <div class="cream-card p-5 sm:p-6 flex flex-col justify-between">
-        <div>
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <div class="flex items-center gap-2.5">
-              <span class="px-3 py-1 rounded-full text-xs font-black bg-[#FFF0E6] text-[#D96B43] border border-[#FCD5B5]">
-                ${item.days}
-              </span>
-              <h3 class="text-base sm:text-lg font-black text-[#3A302A]">${item.phase}</h3>
-            </div>
-            <span class="text-xs font-bold text-[#8C7A6B] bg-white px-2.5 py-0.5 rounded-full border border-[#EFE4D6]">${item.intensity}</span>
-          </div>
-          <p class="text-xs sm:text-sm text-[#706258] mb-4 leading-relaxed">${item.description}</p>
-          
-          <div class="space-y-3">
-            ${item.warnings.map(w => `
-              <div class="p-3.5 rounded-2xl bg-[#FFFDF9] border border-[#F0E6D8]">
-                <div class="font-bold text-xs sm:text-sm text-[#D96B43] flex items-center gap-1.5 mb-1">
-                  <span>⚠️</span>
-                  <span>${w.title}</span>
-                </div>
-                <p class="text-xs text-[#706258] leading-relaxed">${w.detail}</p>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // 渲染早鳥搶票清單
-  async renderBookings() {
-    const container = document.getElementById('booking-watchlist-container');
-    if (!container) return;
-
-    this.bookings = await window.cloudSync.getBookings();
-
-    container.innerHTML = this.bookings.map(b => {
-      const isBooked = b.is_booked || b.isBooked;
-      const statusClass = isBooked 
-        ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold' 
-        : 'bg-amber-100 text-amber-800 border-amber-300 font-bold animate-pulse';
-
-      return `
-        <div class="cream-card p-4 sm:p-5 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <span class="text-[11px] px-2.5 py-0.5 rounded-full font-bold bg-[#FFF4EC] border border-[#FBD9C4] text-[#D96B43]">
-                ${b.category}
-              </span>
-              <span class="text-[11px] px-2.5 py-0.5 rounded-full border ${statusClass}">
-                ${isBooked ? '✅ 已訂好' : '⏳ 待搶票'}
-              </span>
-            </div>
-            <h4 class="font-extrabold text-[#3A302A] text-sm sm:text-base mb-1.5">${b.title}</h4>
-            <div class="text-xs text-[#706258] space-y-1 mb-2.5">
-              <div>⏰ 建議開搶：<span class="text-[#3A302A] font-bold">${b.recommendedAdvance || '即刻關注'}</span></div>
-              <div>💰 預估費用：<span class="text-[#D96B43] font-mono font-bold">${b.priceEst || '依官網為準'}</span></div>
-            </div>
-            <p class="text-xs text-[#706258] bg-[#FFF9F2] p-2.5 rounded-xl border border-[#F5ECE1] mb-3 leading-relaxed">
-              💡 ${b.tips || ''}
-            </p>
-          </div>
-
-          <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-[#F0E6D8]">
-            ${b.officialUrl ? `
-              <a href="${b.officialUrl}" target="_blank" rel="noopener noreferrer" 
-                 class="inline-flex items-center gap-1 text-xs font-bold text-[#E88D67] hover:underline">
-                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> 官網
-              </a>
-            ` : '<span></span>'}
-
-            <div class="flex items-center gap-1.5">
-              <button onclick="window.app.toggleBookingStatus('${b.id}')" 
-                      class="px-2.5 py-1.5 rounded-xl text-xs font-bold ${isBooked ? 'bg-stone-200 text-stone-700' : 'bg-[#68A67D] text-white hover:bg-[#58926C]'} transition-all btn-cute">
-                ${isBooked ? '標示未訂' : '已訂好 ✨'}
-              </button>
-              <button onclick="window.app.convertBookingToExpense('${b.id}')" 
-                      class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#FFF1E6] text-[#D96B43] border border-[#FCD5B5] hover:bg-[#FFE6D5] transition-all btn-cute"
-                      title="轉記帳">
-                記帳 ✍️
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // 切換預訂狀態
-  async toggleBookingStatus(bookingId) {
-    const booking = this.bookings.find(b => b.id === bookingId);
-    if (!booking) return;
-
-    booking.is_booked = !booking.is_booked;
-    booking.isBooked = booking.is_booked;
-    booking.status = booking.is_booked ? '已預訂' : '待開搶';
-
-    await window.cloudSync.saveBooking(booking);
-    await this.renderBookings();
-    this.showToast(booking.is_booked ? '🎉 已標記為已預訂！' : '已重設為待開搶', 'info');
-  }
-
-  // 將早鳥項目一鍵轉記帳
-  convertBookingToExpense(bookingId) {
-    const booking = this.bookings.find(b => b.id === bookingId);
-    if (!booking) return;
-
-    this.openAddExpenseModal({
-      item_name: booking.title,
-      category: booking.category === '火車高鐵' ? '交通' : (booking.category === '極限運動' || booking.category === '門票景點' ? '門票景點' : '交通'),
-      currency: booking.title.includes('瑞士') ? 'CHF' : (booking.title.includes('波蘭') ? 'PLN' : 'EUR'),
-      notes: `早鳥預訂：${booking.tips || ''}`
-    });
-  }
-
-  // 渲染 DCC 信用卡防雷指南
-  renderCreditCardGuide() {
-    const dccBanner = document.getElementById('dcc-warning-banner');
-    const tipsContainer = document.getElementById('credit-card-tips-container');
-
-    const guide = window.EuroTripData.creditCardGuide;
-
-    if (dccBanner) {
-      dccBanner.innerHTML = `
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFF0EB] via-[#FFE8DE] to-[#FFF5ED] border-2 border-[#FDB896] p-5 sm:p-6 shadow-md">
-          <div class="flex items-start gap-3.5">
-            <div class="p-3 rounded-2xl bg-[#FF7B90] text-white text-2xl flex-shrink-0 shadow-sm">
-              🚨
-            </div>
-            <div>
-              <h3 class="text-base sm:text-lg font-black text-[#D94520] mb-1 tracking-wide">${guide.dccWarning.title}</h3>
-              <p class="text-xs sm:text-sm font-bold text-[#E86A38] mb-2">${guide.dccWarning.subtitle}</p>
-              <p class="text-xs text-[#706258] leading-relaxed mb-3">${guide.dccWarning.explanation}</p>
-              <div class="p-3 rounded-xl bg-white/90 border border-[#FDB896] text-xs font-bold text-[#D94520] leading-relaxed shadow-sm">
-                🎯 黃金法則：${guide.dccWarning.goldenRule}
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    if (tipsContainer) {
-      tipsContainer.innerHTML = guide.cardTips.map(tip => `
-        <div class="cream-card p-4 sm:p-5 flex flex-col justify-between">
-          <div class="flex items-center gap-2.5 mb-2">
-            <div class="w-8 h-8 rounded-xl bg-[#FFF0E6] text-[#D96B43] flex items-center justify-center text-sm font-bold border border-[#FCD5B5]">
-              💳
-            </div>
-            <h4 class="font-extrabold text-[#3A302A] text-xs sm:text-sm">${tip.title}</h4>
-          </div>
-          <p class="text-xs text-[#706258] leading-relaxed">${tip.content}</p>
-        </div>
-      `).join('');
     }
   }
 
@@ -725,10 +577,10 @@ class AppController {
 
   closeCloudSettingsModal() {
     const modal = document.getElementById('cloud-settings-modal');
-    if (modal) {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
+    if (!modal) return;
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
   }
 
   toggleBackendSettingsFields(mode) {
