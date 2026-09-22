@@ -174,9 +174,9 @@ class ItineraryManager {
         </div>
       `}
 
-      <!-- 3. 每日行程清單 (Daily Schedule Timeline) -->
-      <div class="space-y-3 pt-1">
-        <div class="flex items-center justify-between">
+      <!-- 3. 每日行程明細清單 (獨立卡片區塊) -->
+      <div class="cream-card p-4 sm:p-5 space-y-3.5">
+        <div class="flex items-center justify-between pb-2.5 border-b border-[#F0E6D8]">
           <h3 class="text-sm sm:text-base font-black text-[#3A302A] flex items-center gap-1.5">
             <span>📅</span> ${this.currentPhaseId === 'ALL' ? '40 天每日行程規劃清單' : `${currentPhase.title.split('：')[0]}每日行程 (${filteredDays.length} 天)`}
           </h3>
@@ -185,7 +185,7 @@ class ItineraryManager {
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           ${filteredDays.map(d => `
-            <div class="cream-card p-3.5 sm:p-4 flex flex-col justify-between hover:border-[#FCD5B5] transition-all">
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDF9] border border-[#EFE4D6] shadow-sm flex flex-col justify-between hover:border-[#FCD5B5] transition-all">
               <div>
                 <div class="flex items-center justify-between gap-2 mb-2">
                   <div class="flex items-center gap-2">

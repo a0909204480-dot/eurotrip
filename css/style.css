@@ -158,3 +158,28 @@ body {
   transform: scale(0.98);
   background-color: #FBF4EA;
 }
+
+/* 日期與表單輸入框響應式防溢出修復 (Mobile Input Fix) */
+input[type="date"],
+input[type="text"],
+input[type="number"],
+select {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+input[type="date"] {
+  min-height: 38px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* 獨立區塊視覺分界 (Distinct Section Blocks) */
+.section-block-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid #EFE4D6;
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 16px rgba(217, 180, 142, 0.08);
+}
+
